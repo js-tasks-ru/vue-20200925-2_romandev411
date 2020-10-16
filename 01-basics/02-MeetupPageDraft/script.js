@@ -48,19 +48,62 @@ export const app = new Vue({
   el: '#app',
 
   data: {
-    //
+    rawMeetup: [],
+    agendaIcons: agendaItemIcons,
+    titles: agendaItemTitles,
   },
 
-  mounted() {
-    // Требуется получить данные митапа с API
+  async mounted() {
+    await this.fetchMeetup();
   },
 
   computed: {
-    //
+    meetup() {
+      if (!this.rawMeetup) {
+        return [];
+      }
+      return Object.assign({}, this.rawMeetup, {
+        img: this.setImg(),
+        newDate: this.setDate(this.rawMeetup.date)
+      });
+    },
   },
 
   methods: {
-    // Получение данных с API предпочтительнее оформить отдельным методом,
-    // а не писать прямо в mounted()
+    async fetchMeetup() {
+      await fetch(`${API_URL}/meetups/${MEETUP_ID}`)
+        .then(response => response.json())
+        .then((result) => {
+          this.rawMeetup = result;
+        });
+    },
+    setImg() {
+      return getMeetupCoverLink(this.rawMeetup);
+    },
+    setDate(time) {
+      const date = new Date(time);
+      const months = [
+        'Янв',
+        'Фев',
+        'Мар',
+        'Апр',
+        'Май',
+        'Июн',
+        'Июл',
+        'Авг',
+        'Сен',
+        'Ноя',
+        'Дек',
+      ];
+
+      const day = date.getUTCDate();
+      const month = months[date.getMonth()+1];
+      const year = date.getUTCFullYear();
+
+      return {
+        dateMAchine: `${year}-${date.getMonth()+1}-${day}`,
+        dateNormal: `${day} ${month}. ${year}`,
+      }
+    }
   },
 });
